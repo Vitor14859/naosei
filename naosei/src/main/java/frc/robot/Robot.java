@@ -74,20 +74,15 @@ public class Robot extends TimedRobot {
     tigreE = sim.getRawAxis(3);
     tigreE *= -1;
 
-    vd *= tigreD; ve *= tigreD; 
-    vd *= tigreE; ve *= tigreE;
+    dmotor1.set(ControlMode.PercentOutput, tigreD);
+    emotor1.set(ControlMode.PercentOutput, tigreD);
 
-    dmotor1.set(ControlMode.PercentOutput, vd);
-    emotor1.set(ControlMode.PercentOutput, ve);
+    dmotor1.set(ControlMode.PercentOutput, tigreE);
+    emotor1.set(ControlMode.PercentOutput, tigreE);
 
     pov();
     execute();
 
-  }
-
-   public void drive(double left, double right){
-    dmotor1.set(ControlMode.PercentOutput, right);
-    emotor1.set(ControlMode.PercentOutput, left);    
   }
 
   public void pov(){
@@ -104,7 +99,6 @@ public class Robot extends TimedRobot {
     }
     vd *= vel;
     ve *= vel;
-    drive(ve, vd);
   }
 
     
