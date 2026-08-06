@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 
 
+
 public class Robot extends TimedRobot {
 
   private final VictorSPX dmotor1 = new VictorSPX(1);
@@ -22,15 +23,11 @@ public class Robot extends TimedRobot {
 
   double vel, ve, vd;
   int angulo;
+  double tigreD, tigreE, anlE1, anlE2, anlD1, anlD2,velD, velE;
+  double dz = 0.04;
 
   Joystick sim = new Joystick(0);
-
-  boolean A;
-  boolean B;
-  boolean C;
-  boolean D;
-  double tigreD;
-  double tigreE;
+  boolean A, B, C, D;
 
   public Robot() {
     dmotor1.setInverted(true);
@@ -44,14 +41,15 @@ public class Robot extends TimedRobot {
     emotor1.setNeutralMode(NeutralMode.Brake);
     emotor2.setNeutralMode(NeutralMode.Brake);
     
-    emotor1.configNeutralDeadband(0.04);
-    emotor2.configNeutralDeadband(0.04);
-    dmotor1.configNeutralDeadband(0.04);
-    dmotor2.configNeutralDeadband(0.04);
+    emotor1.configNeutralDeadband(dz);
+    emotor2.configNeutralDeadband(dz);
+    dmotor1.configNeutralDeadband(dz);
+    dmotor2.configNeutralDeadband(dz);
   }
 
   @Override
   public void teleopPeriodic() {
+
 
     angulo = sim.getPOV();
     
@@ -70,20 +68,51 @@ public class Robot extends TimedRobot {
       vel = 1.0;
     }
 
-    tigreD = sim.getRawAxis(2);
-    tigreE = sim.getRawAxis(3);
+    tigreD = sim.getRawAxis(3);
+    tigreE = sim.getRawAxis(2);
     tigreE *= -1;
 
-    dmotor1.set(ControlMode.PercentOutput, tigreD);
-    emotor1.set(ControlMode.PercentOutput, tigreD);
 
-    dmotor1.set(ControlMode.PercentOutput, tigreE);
-    emotor1.set(ControlMode.PercentOutput, tigreE);
+    anlD1 = sim.getRawAxis(0); 
+    anlD2 = sim.getRawAxis(1);
+    anlE1 = sim.getRawAxis(4); 
+    anlE2 = sim.getRawAxis(5);
 
+    Triggers();
     pov();
+    if(sim.getPOV() == -1){
+     Triggers();
+    }
+    else if(tigreD <= 0 && tigreE <= 0){
+      pov();
+    }
+    drive(vd,ve);
     execute();
 
   }
+
+  public void Triggers(){
+    if (sim.getRawAxis(3) > dz){
+      vd = tigreD;
+      ve = tigreD;
+    }
+    else if (sim.getRawAxis(2) > -dz){
+      ve = tigreE;
+      vd = tigreE;
+    }
+    else{
+      vd = 0;
+      ve = 0;
+    }
+  }
+
+  public void drive(double rightVel, double leftVel){
+    velD = rightVel;
+    velE = leftVel;
+
+    emotor1.set(ControlMode.PercentOutput, ve);
+    dmotor1.set(ControlMode.PercentOutput, vd);
+  } 
 
   public void pov(){
     switch (angulo) {
@@ -100,7 +129,6 @@ public class Robot extends TimedRobot {
     vd *= vel;
     ve *= vel;
   }
-
     
     public void execute() {
       SmartDashboard.putBoolean("Button A", A);
@@ -108,9 +136,21 @@ public class Robot extends TimedRobot {
       SmartDashboard.putBoolean("Button C", C);
       SmartDashboard.putBoolean("Button D", D);
       SmartDashboard.putNumber("Button Speed", vel);
-      SmartDashboard.putNumber("velocidade esquerda", ve);
-      SmartDashboard.putNumber("velocidade direita", vd);
+      SmartDashboard.putNumber("velocidade esquerda", velE);
+      SmartDashboard.putNumber("velocidade direita", velD);
       SmartDashboard.putNumber("tigrinho direito", tigreD);
       SmartDashboard.putNumber("tigrinho esquerdo", tigreE);
+    }
+
+    public void anlesq() {
+      if(anlE1 > dz && anlE2 > dz){
+
+      }
+
+    }
+    public void anldir() {
+      if(anlD1 > dz && anlD2 > dz){
+
+      }
     }
   }
