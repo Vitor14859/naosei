@@ -8,6 +8,7 @@ import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 
@@ -23,8 +24,11 @@ public class Robot extends TimedRobot {
 
   double vel, ve, vd;
   int angulo;
-  double tigreD, tigreE, anlE1, anlE2, anlD1, anlD2,velD, velE;
-  double dz = 0.04;
+  double tigreD, tigreE, velD, velE, cal1,cal4;
+  double eixoEx, eixoEy, eixoDx, eixoDy;
+  double dz = 0.1;
+  double sen, sen1;
+  Timer tmoto = new Timer();
 
   Joystick sim = new Joystick(0);
   boolean A, B, C, D;
@@ -73,18 +77,28 @@ public class Robot extends TimedRobot {
     tigreE *= -1;
 
 
-    anlD1 = sim.getRawAxis(0); 
-    anlD2 = sim.getRawAxis(1);
-    anlE1 = sim.getRawAxis(4); 
-    anlE2 = sim.getRawAxis(5);
+    eixoEx = sim.getRawAxis(0); 
+    eixoEy = -sim.getRawAxis(1);
+    eixoDx = sim.getRawAxis(4); 
+    eixoDy = -sim.getRawAxis(5);
 
-    Triggers();
-    pov();
-    if(sim.getPOV() == -1){
-     Triggers();
+    caulculodir();
+    caulculoesq();
+  
+    if(cal1 > dz){
+     anlesq();
     }
-    else if(tigreD <= 0 && tigreE <= 0){
-      pov();
+    else if (cal4 > dz){
+      anldir();
+    }
+    else if(tigreD > dz || tigreE < -dz){
+      Triggers();
+    }
+    else if (sim.getPOV() != -1) {
+        pov();
+    }
+    else{
+      vd = 0; ve = 0;
     }
     drive(vd,ve);
     execute();
@@ -92,11 +106,11 @@ public class Robot extends TimedRobot {
   }
 
   public void Triggers(){
-    if (sim.getRawAxis(3) > dz){
+    if (tigreD > dz){
       vd = tigreD;
       ve = tigreD;
     }
-    else if (sim.getRawAxis(2) > -dz){
+    else if (tigreE < -dz){
       ve = tigreE;
       vd = tigreE;
     }
@@ -104,7 +118,10 @@ public class Robot extends TimedRobot {
       vd = 0;
       ve = 0;
     }
+    vd *= vel;
+    ve *= vel;
   }
+
 
   public void drive(double rightVel, double leftVel){
     velD = rightVel;
@@ -129,6 +146,7 @@ public class Robot extends TimedRobot {
     vd *= vel;
     ve *= vel;
   }
+
     
     public void execute() {
       SmartDashboard.putBoolean("Button A", A);
@@ -140,17 +158,115 @@ public class Robot extends TimedRobot {
       SmartDashboard.putNumber("velocidade direita", velD);
       SmartDashboard.putNumber("tigrinho direito", tigreD);
       SmartDashboard.putNumber("tigrinho esquerdo", tigreE);
+      
+    }
+    
+    public void caulculoesq() {
+      double cal = (eixoEx * eixoEx) + (eixoEy * eixoEy);
+      if (cal > 1){
+        cal = 1;
+      }
+      sen = eixoEx / cal1;
+      cal1 = Math.sqrt(cal);
+            
+    }
+    public void caulculodir(){ 
+    double cal3 = (eixoDx * eixoDx)+ (eixoDy * eixoDy);
+    if(cal3 > 1){
+      cal3 = 1;
+    }
+    sen1 = eixoDx / cal4;
+    cal4 = Math.sqrt(cal3);
     }
 
     public void anlesq() {
-      if(anlE1 > dz && anlE2 > dz){
-
+      if(eixoEx > dz && eixoEy > dz){
+        
+        vd = cal1 -sen; ve = cal1 ;
+      }
+      else if(eixoEx < -dz && eixoEy > dz) {
+        vd = cal1; ve = cal1 + sen ;
+      }
+      else if(eixoEx < -dz && eixoEy < -dz){
+        vd = -cal1 ; ve = -cal1 - sen ;
+      } 
+      else if(eixoEx > dz && eixoEy < -dz){
+        vd = -cal1 +sen ; ve = -cal1;
       }
 
+      
+      else if(eixoEx < dz && eixoEy > dz){
+        vd = cal1 ; ve = cal1 ;
+      }
+      else if(eixoEx > dz && eixoEy < dz){
+        vd = 0; ve = cal1 ;
+      }
+      else if(eixoEx < dz && eixoEy < -dz){
+        vd = -cal1; ve = -cal1 ;
+      }
+      else if(eixoEx < -dz && eixoEy < dz){
+        vd = cal1  ; ve = 0;
+      }
+      
+      else{
+        vd=0;ve=0;
+      }
+      vd *= vel;
+      ve *= vel;  
+      caulculoesq();
     }
     public void anldir() {
-      if(anlD1 > dz && anlD2 > dz){
-
+     if(eixoDx > dz && eixoDy > dz){
+        
+        vd = cal4 -sen1; ve = cal4 ;
       }
+      else if(eixoDx < -dz && eixoDy > dz) {
+        vd = cal4; ve = cal4 + sen1 ;
+      }
+      else if(eixoDx < -dz && eixoDy < -dz){
+        vd = -cal4 ; ve = -cal4 - sen1 ;
+      } 
+      else if(eixoDx > dz && eixoDy < -dz){
+        vd = -cal4 +sen1 ; ve = -cal4;
+      }
+
+      
+      else if(eixoDx < dz && eixoDy > dz){
+        vd = cal4 ; ve = cal4 ;
+      }
+      else if(eixoDx > dz && eixoDy < dz){
+        vd = 0; ve = cal4 ;
+      }
+      else if(eixoDx < dz && eixoDy < -dz){
+        vd = -cal4; ve = -cal4 ;
+      }
+      else if(eixoDx < -dz && eixoDy < dz){
+        vd = cal4  ; ve = 0;
+      }
+      
+      else{
+        vd=0;ve=0;
+      }
+      vd *= vel;
+      ve *= vel;  
+      caulculodir();
+    }
+
+     @Override
+  public void autonomousInit(){
+    tmoto.reset();
+  }
+
+    @Override
+    public void autonomousPeriodic(){
+      if(tmoto.get() < 2){
+        tmoto.start();
+        drive(1, 1);
+      }
+      else{
+        drive(0, 0);
+    
+      }
+      execute();
     }
   }
